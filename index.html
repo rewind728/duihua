@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<title>对花 · 双人联机</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no" />
+<meta name="color-scheme" content="dark" />
+<meta name="theme-color" content="#0D3A30" />
+<meta name="description" content="对花：两个人、两部手机、一副牌，随机主花色，领出压牌接力捡牌。" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="对花" />
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="apple-touch-icon" href="icons/icon-180.png" />
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml" />
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<main id="app">
+
+  <!-- ───────────── 首页 ───────────── -->
+  <section id="screen-home" class="screen home-screen">
+    <header class="brand">
+      <div class="seal">花</div>
+      <h1>对花</h1>
+      <p class="tagline">双人联机 · 一副牌</p>
+    </header>
+
+    <div class="panel home-panel">
+      <p class="home-desc">
+        随机主花色 · 每人 10 张<br />
+        领出、压牌、接力、捡牌、塞牌
+      </p>
+      <div class="actions-col">
+        <button type="button" id="btn-create" class="btn primary">创建房间</button>
+        <button type="button" id="btn-resume" class="btn ghost hidden">回到上次的房间</button>
+        <button type="button" id="btn-rules" class="btn ghost">玩法</button>
+      </div>
+    </div>
+
+    <p class="footnote">
+      你和朋友各用一部手机，点开链接就能玩。<br />
+      一个用 WiFi、一个用流量也没问题。
+    </p>
+  </section>
+
+  <!-- ───────────── 等待对手 ───────────── -->
+  <section id="screen-lobby" class="screen lobby-screen hidden">
+    <header class="lobby-head">
+      <h2>等待对手</h2>
+      <p class="tagline">把链接发给朋友，对方点开就能进</p>
+    </header>
+
+    <div class="linkbox">
+      <input id="share-link" type="text" readonly spellcheck="false" />
+      <button type="button" id="btn-copy" class="btn small ghost">复制</button>
+    </div>
+
+    <div class="lobby-state">
+      <div class="pulse"><i></i><i></i><i></i></div>
+      <p id="lobby-status">正在连接…</p>
+    </div>
+
+    <div class="room-meta">
+      <span class="chip" id="room-chip">房间 —</span>
+      <span class="chip" id="lobby-trump">主花色 —</span>
+      <span class="chip" id="lobby-first">先手 —</span>
+    </div>
+
+    <button type="button" id="btn-leave-lobby" class="btn ghost">离开房间</button>
+  </section>
+
+  <!-- ───────────── 对局 ───────────── -->
+  <section id="screen-game" class="screen game-screen hidden">
+    <header class="hud">
+      <div class="hud-main">
+        <div class="player-card" id="card-opp">
+          <span class="avatar">对</span>
+          <div class="player-meta">
+            <span class="player-name">对手</span>
+            <span class="player-tag" id="opp-tag">—</span>
+          </div>
+          <span class="hand-count" id="opp-count">10</span>
+        </div>
+        <div class="hud-right">
+          <span class="trump-chip" id="hud-trump">♦ 主</span>
+          <span class="score-chip" id="hud-score">0 : 0</span>
+          <button type="button" id="btn-menu" class="icon-btn" aria-label="菜单">⋯</button>
+        </div>
+      </div>
+      <div class="hud-sub">
+        <span id="hud-round">第 1 局</span>
+        <span id="hud-deck">牌堆 32</span>
+        <span id="hud-discard">弃牌 0</span>
+        <span id="hud-phase" class="phase">轮到你领出</span>
+      </div>
+    </header>
+
+    <div class="table-wrap">
+      <div class="table-head">
+        <span class="table-title">桌面</span>
+        <div class="n-chips" id="n-chips"></div>
+        <button type="button" id="btn-log" class="btn tiny ghost">记录</button>
+      </div>
+      <div class="table-scroll" id="table-scroll">
+        <div class="table-empty" id="table-empty">等待领出…</div>
+        <div class="table-cards" id="table-cards"></div>
+      </div>
+      <div class="table-hint" id="table-hint"></div>
+    </div>
+
+    <div class="hand-wrap">
+      <div class="hand-head">
+        <span class="hand-title" id="hand-title">你的手牌</span>
+        <span class="hand-count" id="hand-count">10 张</span>
+        <button type="button" id="btn-expand" class="btn tiny ghost">展开</button>
+      </div>
+      <div class="hand-scroll" id="hand-scroll">
+        <div class="hand" id="hand"></div>
+      </div>
+    </div>
+
+    <nav class="action-bar" id="action-bar"></nav>
+
+    <div class="turn-banner" id="turn-banner"></div>
+  </section>
+
+  <!-- ───────────── 弹层 ───────────── -->
+  <div class="overlay hidden" id="overlay">
+    <div class="dialog" role="dialog" aria-modal="true">
+      <h3 id="dialog-title"></h3>
+      <p id="dialog-text"></p>
+      <div id="dialog-extra"></div>
+      <div class="dialog-actions" id="dialog-actions"></div>
+    </div>
+  </div>
+
+  <!-- ───────────── 手牌展开 ───────────── -->
+  <div class="sheet hidden" id="hand-sheet">
+    <div class="sheet-panel">
+      <header class="sheet-head">
+        <h3>全部手牌</h3>
+        <button type="button" id="btn-sheet-close" class="btn tiny ghost">关闭</button>
+      </header>
+      <div class="sheet-grid" id="sheet-grid"></div>
+      <div class="sheet-foot" id="sheet-foot"></div>
+    </div>
+  </div>
+
+  <div class="toast-wrap" id="toast-wrap"></div>
+</main>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>
